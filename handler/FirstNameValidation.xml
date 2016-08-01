@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<eventhandlers xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+               xmlns="http://www.oracle.com/schema/oim/platform/kernel"
+               xsi:schemaLocation="http://www.oracle.com/schema/oim/platform/kernel orchestration-handlers.xsd">
+    <validation-handler class="com.oim.gis.veg.validation.FirstNameValidation" entity-type="User" operation="CREATE"
+                        name="FirstNameValidation" order="1000"/>
+    <validation-handler class="com.oim.gis.veg.validation.FirstNameValidation" entity-type="User" operation="MODIFY"
+                        name="FirstNameValidation" order="1000"/>
+</eventhandlers>

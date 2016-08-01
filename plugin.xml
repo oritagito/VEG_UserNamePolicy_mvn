@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<oimplugins>
+    <plugins pluginpoint="oracle.iam.identity.usermgmt.api.UserNamePolicy">
+        <plugin pluginclass="com.oim.gis.veg.login.GenerateLogin" version="1.0" name="GenerateLogin"/>
+    </plugins>
+
+    <plugins pluginpoint="oracle.iam.platform.kernel.spi.EventHandler">
+        <plugin pluginclass="com.oim.gis.veg.validation.FirstNameValidation" version="1.0" name="FirstNameValidation"/>
+        <plugin pluginclass="com.oim.gis.veg.validation.LastNameValidation" version="1.0" name="LastNameValidation"/>
+        <plugin pluginclass="com.oim.gis.veg.validation.MiddleNameValidation" version="1.0"
+                name="MiddleNameValidation"/>
+        <plugin pluginclass="com.oim.gis.veg.handler.pre.UpdateAttributes_preprocess" version="1.0"
+                name="UpdateAttributes_preprocess"/>
+        <plugin pluginclass="com.oim.gis.veg.handler.post.UpdateAttributes_postprocess" version="1.0"
+                name="UpdateAttributes_postprocess"/>
+    </plugins>
+
+</oimplugins>
