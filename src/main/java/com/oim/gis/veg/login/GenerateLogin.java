@@ -46,7 +46,7 @@ public class GenerateLogin implements UserNamePolicy {
     }
 
     public String getDescription(Locale locale) {
-        return "Custom UFA User Name Policy (firstInitial lastName)";
+        return "Custom UFA UserNamePolicy (firstInitial lastName)";
     }
 
 }
