@@ -14,5 +14,4 @@
         <plugin pluginclass="com.oim.gis.veg.handler.post.UpdateAttributes_postprocess" version="1.0"
                 name="UpdateAttributes_postprocess"/>
     </plugins>
-
 </oimplugins>

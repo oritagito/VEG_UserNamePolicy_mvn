@@ -3,9 +3,5 @@
                xmlns="http://www.oracle.com/schema/oim/platform/kernel"
                xsi:schemaLocation="http://www.oracle.com/schema/oim/platform/kernel orchestration-handlers.xsd">
     <action-handler class="com.oim.gis.veg.handler.pre.UpdateAttributes_preprocess" entity-type="User"
-                    operation="CREATE" name="UpdateAttributes_preprocess" stage="preprocess" order="999" sync="TRUE"/>
-    <action-handler class="com.oim.gis.veg.handler.pre.UpdateAttributes_preprocess" entity-type="User"
-                    operation="MODIFY" name="UpdateAttributes_preprocess" stage="preprocess" order="999" sync="TRUE"/>
-    <action-handler class="com.oim.gis.veg.handler.pre.UpdateAttributes_preprocess" entity-type="User"
                     operation="DELETE" name="UpdateAttributes_preprocess" stage="preprocess" order="999" sync="TRUE"/>
 </eventhandlers>

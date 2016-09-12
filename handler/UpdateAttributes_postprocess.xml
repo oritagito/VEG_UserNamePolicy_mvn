@@ -3,7 +3,7 @@
                xmlns="http://www.oracle.com/schema/oim/platform/kernel"
                xsi:schemaLocation="http://www.oracle.com/schema/oim/platform/kernel orchestration-handlers.xsd">
     <action-handler class="com.oim.gis.veg.handler.post.UpdateAttributes_postprocess" entity-type="User"
-                    operation="CREATE" name="UpdateAttributes_postprocess" stage="postprocess" order="1000"
+                    operation="CREATE" name="UpdateAttributes_postprocess" stage="postprocess" order="1050"
                     sync="TRUE"/>
     <action-handler class="com.oim.gis.veg.handler.post.UpdateAttributes_postprocess" entity-type="User"
                     operation="MODIFY" name="UpdateAttributes_postprocess" stage="postprocess" order="1000"

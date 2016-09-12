@@ -12,9 +12,7 @@ public class GenerateLogin implements UserNamePolicy {
     public String getUserNameFromPolicy(Map<String, String> reqData) throws UserNameGenerationException {
 
         String userName;
-
         userName = Utils.generateName(reqData.get("First Name"), reqData.get("Last Name"), reqData.get("Middle Name"));
-
         return userName;
     }
 

@@ -1,10 +1,8 @@
 package com.oim.gis.veg.handler.post;
 
-import Thor.API.Exceptions.tcAPIException;
-import Thor.API.Operations.tcUserOperationsIntf;
-import Thor.API.tcResultSet;
 import com.oim.gis.veg.utils.Utils;
-import oracle.iam.platform.Platform;
+import oracle.iam.identity.exception.*;
+import oracle.iam.identity.usermgmt.vo.User;
 import oracle.iam.platform.context.ContextAware;
 import oracle.iam.platform.kernel.spi.PostProcessHandler;
 import oracle.iam.platform.kernel.vo.*;
@@ -13,243 +11,349 @@ import java.io.Serializable;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.Locale;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class UpdateAttributes_postprocess implements PostProcessHandler {
 
-    private static final Logger log = Logger.getLogger("PLUGINS");
+    private static final Logger LOG = Logger.getLogger("PLUGINS");
     private final String className = getClass().getName();
 
-    private final String lookupWorking = "Working";                // Работает
-    private final String lookupVacation = "Vacation";              // В Отпуске
-    private final String lookupFired = "Fired";                    // Уволен
-    private final String lookupMaternityLeave = "Maternity-Leave"; // Декретный Отпуск
+    private final String WORKING = "Working";                 // Работает
+    private final String VACATION = "Vacation";               // В Отпуске
+    private final String FIRED = "Fired";                     // Уволен
+    private final String MATERNITY_LEAVE = "Maternity-Leave"; // Декретный Отпуск
 
-    private final String usrActive = "Active";
-    private final String usrDisabled = "Disabled";
+    private final String ACTIVE = "Active";
+    private final String DISABLED = "Disabled";
+
+    private final Locale LOCALE = new Locale("ru", "RU");
 
     public EventResult execute(long l, long l1, Orchestration orchestration) {
-        log.entering(className, "---*--- execute ---*--- ");
-        log.log(Level.INFO, "---* Entering  EventResult of UpdateAttributes_postprocess");
-        log.log(Level.INFO, "---* orchestration.getOperation() -> [" + orchestration.getOperation() + "]");
+        LOG.entering(className, "---*--- execute ---*--- ");
+        LOG.log(Level.INFO, "---* Entering  EventResult of UpdateAttributes_postprocess");
+        LOG.log(Level.INFO, "---* orchestration.getOperation() -> [" + orchestration.getOperation() + "]");
 
         String userKey = orchestration.getTarget().getEntityId();
-        log.log(Level.FINEST, "---* userKey -> [" + userKey + "]");
+        LOG.log(Level.FINEST, "---* userKey -> [" + userKey + "]");
+        LOG.log(Level.FINEST, "---* orchestration.getParameters() -> [" + orchestration.getParameters() + "]");
 
-        HashMap<String, Serializable> orchestrationParameters = orchestration.getParameters();
-        log.log(Level.FINEST, "---* orchestrationParameters -> [" + orchestrationParameters + "]");
+        executeEvent(userKey, orchestration.getOperation(), orchestration.getParameters());
 
-        Set<String> parametersSet = orchestrationParameters.keySet();
-        log.log(Level.FINEST, "---* parametersSet -> [" + parametersSet + "]");
-
-        String empStatus = null;
-
-        if (orchestration.getOperation().equalsIgnoreCase("MODIFY")) {
-            log.log(Level.INFO, "---* Operation is MODIFY");
-
-            boolean isUpdateAttributes = false;
-
-            for (String key : parametersSet) {
-                Serializable serializable = orchestrationParameters.get(key);
-                if (key.equalsIgnoreCase("emp_status")) {
-                    isUpdateAttributes = true;
-                    if (serializable == null) empStatus = "";
-                    else {
-                        empStatus = serializable.toString();
-                        log.log(Level.FINEST, "---* empStatus -> [" + empStatus + "]");
-                    }
-                }
-            }
-
-            if (isUpdateAttributes) {
-                String response = empStatusIsUpdate(userKey, empStatus);
-                log.log(Level.INFO, "---* response updateEmpStatus-> [" + response + "]");
-            }
-        } else if (orchestration.getOperation().equalsIgnoreCase("CREATE")) {
-            log.log(Level.INFO, "---* Operation is CREATE");
-
-            empStatus = getParameterValue(orchestrationParameters, "emp_status") == null ? "" : getParameterValue(orchestrationParameters, "emp_status");
-            log.log(Level.FINEST, "---* empStatus -> [" + empStatus + "]");
-
-            String response = empStatusIsUpdate(userKey, empStatus);
-            log.log(Level.INFO, "---* response updateEmpStatus-> [" + response + "]");
-        }
-
-        log.log(Level.INFO, "---* Exiting  EventResult of UpdateAttributes_postprocess");
-        log.exiting(className, "---*--- execute ---*---");
+        LOG.log(Level.INFO, "---* Exiting  EventResult of UpdateAttributes_postprocess");
+        LOG.exiting(className, "---*--- execute ---*---");
 
         return new EventResult();
     }
 
     public BulkEventResult execute(long l, long l1, BulkOrchestration bulkOrchestration) {
-        log.entering(className, "---*--- execute ---*---");
-        log.log(Level.INFO, "---* Entering BulkEventResult of UpdateAttributes_postprocess");
-        log.log(Level.INFO, "---* bulkOrchestration.getOperation() -> [" + bulkOrchestration.getOperation() + "]");
+        LOG.entering(className, "---*--- execute ---*---");
+        LOG.log(Level.INFO, "---* Entering BulkEventResult of UpdateAttributes_postprocess");
+        LOG.log(Level.INFO, "---* bulkOrchestration.getOperation() -> [" + bulkOrchestration.getOperation() + "]");
 
-        String userKey = bulkOrchestration.getTarget().getEntityId();
-        log.log(Level.FINEST, "---* userKey -> [" + userKey + "]");
+        HashMap[] bulkParameters = bulkOrchestration.getBulkParameters();
 
-        HashMap<String, Serializable>[] bulkParameters = bulkOrchestration.getBulkParameters();
-        log.log(Level.FINEST, "---* bulkParameters -> [" + bulkParameters + "]");
+        String[] userKey = bulkOrchestration.getTarget().getAllEntityId();
 
-        String empStatus = null;
-
-        if (bulkOrchestration.getOperation().equalsIgnoreCase("MODIFY")) {
-            log.log(Level.INFO, "---* Operation is MODIFY");
-
-            for (HashMap<String, Serializable> bulkParameter : bulkParameters) {
-                Set<String> bulkKeySet = bulkParameter.keySet();
-
-                boolean isUpdateAttributes = false;
-
-                for (String key : bulkKeySet) {
-                    Serializable serializable = bulkParameter.get(key);
-                    if (key.equalsIgnoreCase("emp_status")) {
-                        isUpdateAttributes = true;
-                        if (serializable == null) empStatus = "";
-                        else {
-                            empStatus = serializable.toString();
-                            log.log(Level.FINEST, "---* empStatus -> [" + empStatus + "]");
-                        }
-                    }
-                }
-                if (isUpdateAttributes) {
-                    String response = empStatusIsUpdate(userKey, empStatus);
-                    log.log(Level.INFO, "---* response updateEmpStatus-> [" + response + "]");
-                }
-            }
-        } else if (bulkOrchestration.getOperation().equalsIgnoreCase("CREATE")) {
-            log.log(Level.INFO, "---* Operation is CREATE");
-
-            for (HashMap<String, Serializable> bulkParameter : bulkParameters) {
-
-                empStatus = getParameterValue(bulkParameter, "emp_status") == null ? "" : getParameterValue(bulkParameter, "emp_status");
-                log.log(Level.FINEST, "---* empStatus -> [" + empStatus + "]");
-
-                String response = empStatusIsUpdate(userKey, empStatus);
-                log.log(Level.INFO, "---* response updateEmpStatus-> [" + response + "]");
-            }
+        for (int i = 0; i < bulkParameters.length; i++) {
+            LOG.log(Level.FINEST, "---* userKey -> [" + userKey[i] + "]");
+            LOG.log(Level.FINEST, "---* bulkParameters -> [" + bulkParameters[i] + "]");
+            executeEvent(userKey[i], bulkOrchestration.getOperation(), bulkParameters[i]);
         }
 
-        log.log(Level.INFO, "---* Exiting BulkEventResult of UpdateAttributes_postprocess");
-        log.exiting(className, "---*--- execute ---*---");
+        LOG.log(Level.INFO, "---* Exiting BulkEventResult of UpdateAttributes_postprocess");
+        LOG.exiting(className, "---*--- execute ---*---");
         return new BulkEventResult();
     }
 
-    private String empStatusIsUpdate(String userKey, String empStatus) {
+    private void executeEvent(String userKey, String operation, HashMap parameters) {
+        LOG.entering(this.className, "---* executeEvent", new Object[]{operation, userKey});
+
+        String empStatus = null;
+        String firstName = null;
+        String lastName = null;
+        String middleName = null;
+
+        String response;
+
+        if (operation.equalsIgnoreCase("MODIFY")) {
+            LOG.log(Level.INFO, "---* Operation is MODIFY");
+
+            boolean isUpdateAttributes = false;
+            boolean isUpdateLastName = false;
+
+            if (parameters.containsKey("emp_status")) {
+                isUpdateAttributes = true;
+                empStatus = getParameterValue(parameters, "emp_status") == null ? "" : getParameterValue(parameters, "emp_status");
+                LOG.log(Level.FINEST, "---* empStatus -> [" + empStatus + "]");
+            }
+
+            if (parameters.containsKey("First Name")) {
+                isUpdateAttributes = true;
+                firstName = getParameterValue(parameters, "First Name") == null ? "" : getParameterValue(parameters, "First Name");
+                LOG.log(Level.FINEST, "---* firstName -> [" + firstName + "]");
+            }
+
+            if (parameters.containsKey("Last Name")) {
+                isUpdateAttributes = true;
+                isUpdateLastName = true;
+                lastName = getParameterValue(parameters, "Last Name") == null ? "" : getParameterValue(parameters, "Last Name");
+                LOG.log(Level.FINEST, "---* lastName -> [" + lastName + "]");
+            }
+
+            if (parameters.containsKey("Middle Name")) {
+                isUpdateAttributes = true;
+                middleName = getParameterValue(parameters, "Middle Name") == null ? "" : getParameterValue(parameters, "Middle Name");
+                LOG.log(Level.FINEST, "---* middleName -> [" + middleName + "]");
+            }
+
+            if (isUpdateLastName) {
+                response = updateLogin(userKey, firstName, lastName, middleName, false);
+                LOG.log(Level.INFO, "---* response updateLogin-> [" + response + "]");
+            }
+
+            if (isUpdateAttributes) {
+                response = updateDisplayNameAndInitials(userKey, firstName, lastName, middleName);
+                LOG.log(Level.INFO, "---* response updateDisplayNameAndInitials-> [" + response + "]");
+
+                response = updateEmpStatusAndLocale(userKey, empStatus, true);
+                LOG.log(Level.INFO, "---* response updateEmpStatusAndLocale-> [" + response + "]");
+            }
+
+        } else if (operation.equalsIgnoreCase("CREATE")) {
+            LOG.log(Level.INFO, "---* Operation is CREATE");
+
+            empStatus = getParameterValue(parameters, "emp_status") == null ? "" : getParameterValue(parameters, "emp_status");
+            LOG.log(Level.FINEST, "---* empStatus -> [" + empStatus + "]");
+
+            firstName = getParameterValue(parameters, "First Name") == null ? "" : getParameterValue(parameters, "First Name");
+            lastName = getParameterValue(parameters, "Last Name") == null ? "" : getParameterValue(parameters, "Last Name");
+            middleName = getParameterValue(parameters, "Middle Name") == null ? "" : getParameterValue(parameters, "Middle Name");
+
+            LOG.log(Level.FINEST, "---* firstName -> [" + firstName + "]");
+            LOG.log(Level.FINEST, "---* lastName -> [" + lastName + "]");
+            LOG.log(Level.FINEST, "---* middleName -> [" + middleName + "]");
+
+            response = updateDisplayNameAndInitials(userKey, firstName, lastName, middleName);
+            LOG.log(Level.INFO, "---* response updateDisplayNameAndInitials-> [" + response + "]");
+
+            response = updateEmpStatusAndLocale(userKey, empStatus, false);
+            LOG.log(Level.INFO, "---* response updateEmpStatusAndLocale-> [" + response + "]");
+        }
+
+        LOG.exiting(this.className, "---* executeEvent");
+    }
+
+    private String updateEmpStatusAndLocale(String userKey, String empStatus, boolean isUpdate) {
 
         String response = null;
 
-        Map<String, String> phAttributeList = new HashMap<String, String>();
-        phAttributeList.put("Users.Key", userKey);
-        tcResultSet resultSet;
-
         try {
-            tcUserOperationsIntf tcUserOperationsIntf = (Platform.getService(tcUserOperationsIntf.class));
-            resultSet = tcUserOperationsIntf.findUsers(phAttributeList);
+            User user = Utils.getUserManager().getDetails(userKey, null, false);
 
-            int count = 0;
-            count = resultSet.getRowCount();
-            log.log(Level.FINEST, "---* count -> [" + count + "]");
+            String usrLogin = user.getLogin();
+            String usrStatus = user.getStatus();
+            String usrDisplayName = user.getDisplayName();
+            String usrFirstName = user.getFirstName();
+            String usrLastName = user.getLastName();
+            String usrMiddleName = user.getMiddleName();
 
-            for (int i = 0; i < count; i++) {
-                resultSet.goToRow(i);
+            User updateUser = new User(userKey);
 
-                String usrLogin = resultSet.getStringValue("Users.User ID");
-                String usrStatus = resultSet.getStringValue("Users.Status");
-                String usrDisplayName = resultSet.getStringValue("Users.Display Name");
-                String firstName = resultSet.getStringValue("Users.First Name");
-                String lastName = resultSet.getStringValue("Users.Last Name");
-                String middleName = resultSet.getStringValue("Users.Middle Name");
+            if (!isUpdate) {
+                updateUser.setLocale(LOCALE);
+            }
 
-                log.log(Level.FINEST, "---* usrLogin -> [" + usrLogin + "]");
-                log.log(Level.FINEST, "---* usrStatus -> [" + usrStatus + "]");
-                log.log(Level.FINEST, "---* usrDisplayName -> [" + usrDisplayName + "]");
-                log.log(Level.FINEST, "---* firstName -> [" + firstName + "]");
-                log.log(Level.FINEST, "---* lastName -> [" + lastName + "]");
-                log.log(Level.FINEST, "---* middleName -> [" + middleName + "]");
+            if (empStatus != null && !empStatus.isEmpty()) {
 
-                if (empStatus != null && empStatus != "") {
-
-                    Map<String, String> updateUsr = new HashMap<String, String>();
-
-                    if (empStatus.equalsIgnoreCase(lookupWorking)) {
-                        if (!usrStatus.equalsIgnoreCase(usrActive)) {
-                            tcUserOperationsIntf.enableUser(Long.valueOf(userKey).longValue());
-                            log.log(Level.FINEST, "---* Enabled user -> [" + userKey + "] Successfully");
-                        }
-                        if (usrDisplayName.toLowerCase().contains("уволен")) {
-                            usrDisplayName = getDisplayName(firstName, lastName, middleName, false);
-                            updateUsr.put("Users.Display Name", usrDisplayName);
-                        }
-                        if (usrLogin.toLowerCase().contains("fired")) {
-                            usrLogin = Utils.generateName(firstName, lastName, middleName);
-                            updateUsr.put("User Login", usrLogin);
-                        }
+                if (empStatus.equalsIgnoreCase(WORKING)) {
+                    if (!usrStatus.equalsIgnoreCase(ACTIVE)) {
+                        Utils.getUserManager().enable(userKey, false);
+                        LOG.log(Level.FINEST, "---* Enabled user -> [" + userKey + "] Successfully");
                     }
-
-                    if (empStatus.equalsIgnoreCase(lookupVacation)) {
-                        if (!usrStatus.equalsIgnoreCase(usrDisabled)) {
-                            tcUserOperationsIntf.disableUser(Long.valueOf(userKey).longValue());
-                            log.log(Level.FINEST, "---* Disabled user -> [" + userKey + "] Successfully");
-                        }
-                        if (usrDisplayName.toLowerCase().contains("уволен")) {
-                            usrDisplayName = getDisplayName(firstName, lastName, middleName, false);
-                            updateUsr.put("Users.Display Name", usrDisplayName);
-                        }
-                        if (usrLogin.toLowerCase().contains("fired")) {
-                            usrLogin = Utils.generateName(firstName, lastName, middleName);
-                            updateUsr.put("User Login", usrLogin);
-                        }
+                    if (usrDisplayName.toLowerCase().contains("уволен")) {
+                        updateUser.setDisplayName(generateDisplayName(usrFirstName, usrLastName, usrMiddleName, false));
                     }
-
-                    if (empStatus.equalsIgnoreCase(lookupFired)) {
-                        if (!usrStatus.equalsIgnoreCase(usrDisabled)) {
-                            tcUserOperationsIntf.disableUser(Long.valueOf(userKey).longValue());
-                            log.log(Level.FINEST, "---* Disabled user -> [" + userKey + "] Successfully");
-                        }
-                        if (!usrDisplayName.toLowerCase().contains("уволен")) {
-                            usrDisplayName = getDisplayName(firstName, lastName, middleName, true);
-                            updateUsr.put("Users.Display Name", usrDisplayName);
-                        }
-                        if (!usrLogin.toLowerCase().contains("fired")) {
-                            Calendar calendar = Calendar.getInstance();
-                            SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
-                            usrLogin = "FIRED_" + usrLogin + "_" + simpleDateFormat.format(calendar.getTime());
-                            updateUsr.put("User Login", usrLogin);
-                        }
+                    if (usrLogin.toLowerCase().contains("fired")) {
+                        updateUser.setLogin(Utils.generateName(usrFirstName, usrLastName, usrMiddleName));
                     }
+                }
 
-                    if (empStatus.equalsIgnoreCase(lookupMaternityLeave)) {
-                        if (!usrStatus.equalsIgnoreCase(usrDisabled)) {
-                            tcUserOperationsIntf.disableUser(Long.valueOf(userKey).longValue());
-                            log.log(Level.FINEST, "---* Disabled user -> [" + userKey + "] Successfully");
-                        }
-                        if (usrDisplayName.toLowerCase().contains("уволен")) {
-                            usrDisplayName = getDisplayName(firstName, lastName, middleName, false);
-                            updateUsr.put("Users.Display Name", usrDisplayName);
-                        }
-                        if (usrLogin.toLowerCase().contains("fired")) {
-                            usrLogin = Utils.generateName(firstName, lastName, middleName);
-                            updateUsr.put("User Login", usrLogin);
-                        }
+                if (empStatus.equalsIgnoreCase(VACATION)) {
+                    if (!usrStatus.equalsIgnoreCase(DISABLED)) {
+                        Utils.getUserManager().disable(userKey, false);
+                        LOG.log(Level.FINEST, "---* Disabled user -> [" + userKey + "] Successfully");
                     }
-                    tcUserOperationsIntf.updateUser(resultSet, updateUsr);
+                    if (usrDisplayName.toLowerCase().contains("уволен")) {
+                        updateUser.setDisplayName(generateDisplayName(usrFirstName, usrLastName, usrMiddleName, false));
+                    }
+                    if (usrLogin.toLowerCase().contains("fired")) {
+                        updateUser.setLogin(Utils.generateName(usrFirstName, usrLastName, usrMiddleName));
+                    }
+                }
+
+                if (empStatus.equalsIgnoreCase(FIRED)) {
+                    if (!usrStatus.equalsIgnoreCase(DISABLED)) {
+                        Utils.getUserManager().disable(userKey, false);
+                        LOG.log(Level.FINEST, "---* Disabled user -> [" + userKey + "] Successfully");
+                    }
+                    if (!usrDisplayName.toLowerCase().contains("уволен")) {
+                        updateUser.setDisplayName(generateDisplayName(usrFirstName, usrLastName, usrMiddleName, true));
+                    }
+                    if (!usrLogin.toLowerCase().contains("fired")) {
+                        Calendar calendar = Calendar.getInstance();
+                        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
+                        updateUser.setLogin("FIRED_" + usrLogin + "_" + simpleDateFormat.format(calendar.getTime()));
+                    }
+                }
+
+                if (empStatus.equalsIgnoreCase(MATERNITY_LEAVE)) {
+                    if (!usrStatus.equalsIgnoreCase(DISABLED)) {
+                        Utils.getUserManager().disable(userKey, false);
+                        LOG.log(Level.FINEST, "---* Disabled user -> [" + userKey + "] Successfully");
+                    }
+                    if (usrDisplayName.toLowerCase().contains("уволен")) {
+                        updateUser.setDisplayName(generateDisplayName(usrFirstName, usrLastName, usrMiddleName, false));
+                    }
+                    if (usrLogin.toLowerCase().contains("fired")) {
+                        updateUser.setLogin(Utils.generateName(usrFirstName, usrLastName, usrMiddleName));
+                    }
                 }
             }
-            tcUserOperationsIntf.close();
-        } catch (tcAPIException e) {
-            e.printStackTrace();
-        } catch (Exception e) {
-            e.printStackTrace();
+
+            Utils.getUserManager().modify(updateUser);
+
+            response = "Success updateEmpStatusAndLocale";
+
+        } catch (NoSuchUserException e) {
+            LOG.log(Level.WARNING, "---* NoSuchUserException", e);
+        } catch (UserLookupException e) {
+            LOG.log(Level.WARNING, "---* UserLookupException", e);
+        } catch (ValidationFailedException e) {
+            LOG.log(Level.WARNING, "---* ValidationFailedException", e);
+        } catch (UserModifyException e) {
+            LOG.log(Level.WARNING, "---* UserModifyException", e);
+        } catch (UserNameGenerationException e) {
+            LOG.log(Level.WARNING, "---* UserNameGenerationException", e);
+        } catch (UserEnableException e) {
+            LOG.log(Level.WARNING, "---* UserEnableException", e);
+        } catch (UserDisableException e) {
+            LOG.log(Level.WARNING, "---* UserDisableException", e);
         }
+
         return response;
     }
 
-    private String getDisplayName(String firstName, String lastName, String middleName, boolean isFired) {
+    private String updateDisplayNameAndInitials(String userKey, String firstName, String lastName, String middleName) {
+
+        String response = null;
+
+        try {
+            User user = Utils.getUserManager().getDetails(userKey, null, false);
+
+            String usrDisplayName = user.getDisplayName();
+            LOG.log(Level.FINEST, "---* usrDisplayName -> [" + usrDisplayName + "]");
+
+            if (!usrDisplayName.toLowerCase().contains("уволен")) {
+
+                User updateUser = new User(userKey);
+
+                if (firstName == null) firstName = user.getFirstName();
+                if (lastName == null) lastName = user.getLastName();
+                if (middleName == null) middleName = user.getMiddleName();
+
+                String displayName = generateDisplayName(firstName, lastName, middleName, false);
+                String initials = generateInitials(firstName, lastName, middleName);
+
+                LOG.log(Level.FINEST, "---* displayName -> [" + displayName + "]");
+                LOG.log(Level.FINEST, "---* initials -> [" + initials + "]");
+
+                updateUser.setDisplayName(displayName);
+                updateUser.setAttribute("Initials", initials);
+                Utils.getUserManager().modify(updateUser);
+
+            } else LOG.log(Level.FINEST, "---* User is Fired");
+
+            response = "Success updateDisplayNameAndInitials";
+
+        } catch (NoSuchUserException e) {
+            LOG.log(Level.WARNING, "---* NoSuchUserException", e);
+        } catch (UserLookupException e) {
+            LOG.log(Level.WARNING, "---* UserLookupException", e);
+        } catch (ValidationFailedException e) {
+            LOG.log(Level.WARNING, "---* ValidationFailedException", e);
+        } catch (UserModifyException e) {
+            LOG.log(Level.WARNING, "---* UserModifyException", e);
+        }
+
+        return response;
+    }
+
+    private String updateLogin(String userKey, String firstName, String lastName, String middleName, boolean isDeleted) {
+
+        String response = null;
+
+        try {
+            User user = Utils.getUserManager().getDetails(userKey, null, false);
+
+            String currentLogin = user.getLogin();
+            LOG.log(Level.FINEST, "---* currentLogin -> [" + currentLogin + "]");
+
+            User updateUser = new User(userKey);
+
+            if (!isDeleted && !currentLogin.toLowerCase().contains("fired")) {
+
+                if (firstName == null) firstName = user.getFirstName();
+                if (lastName == null) lastName = user.getLastName();
+                if (middleName == null) middleName = user.getMiddleName();
+
+                String login = Utils.generateName(firstName, lastName, middleName);
+                LOG.log(Level.FINEST, "---* login -> [" + login + "]");
+
+                updateUser.setLogin(login);
+
+            } else if (isDeleted) {
+
+                String login = null;
+
+                if (currentLogin.toLowerCase().contains("fired")) {
+                    if (currentLogin != null && currentLogin != "") {
+                        Calendar calendar = Calendar.getInstance();
+                        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
+                        login = "DEL_" + currentLogin.substring(currentLogin.indexOf('_') + 1, currentLogin.lastIndexOf('_')) + "_" + simpleDateFormat.format(calendar.getTime());
+                    }
+                } else {
+                    Calendar calendar = Calendar.getInstance();
+                    SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
+                    login = "DEL_" + currentLogin + "_" + simpleDateFormat.format(calendar.getTime());
+                }
+
+                LOG.log(Level.FINEST, "---* login -> [" + login + "]");
+
+                updateUser.setLogin(login);
+            }
+
+            Utils.getUserManager().modify(updateUser);
+
+            response = "Success updateLogin";
+
+        } catch (NoSuchUserException e) {
+            LOG.log(Level.WARNING, "---* NoSuchUserException", e);
+        } catch (UserLookupException e) {
+            LOG.log(Level.WARNING, "---* UserLookupException", e);
+        } catch (UserNameGenerationException e) {
+            LOG.log(Level.WARNING, "---* UserNameGenerationException", e);
+        } catch (UserModifyException e) {
+            LOG.log(Level.WARNING, "---* UserModifyException", e);
+        } catch (ValidationFailedException e) {
+            LOG.log(Level.WARNING, "---* ValidationFailedException", e);
+        }
+
+        return response;
+    }
+
+    private String generateDisplayName(String firstName, String lastName, String middleName, boolean isFired) {
         String usrDisplayName = null;
 
         if (!isFired) {
@@ -265,9 +369,25 @@ public class UpdateAttributes_postprocess implements PostProcessHandler {
         return usrDisplayName;
     }
 
+    private String generateInitials(String firstName, String lastName, String middleName) {
+
+        String initials = null;
+
+        if (lastName != null && lastName != "") {
+            initials = lastName.substring(0, 1).toUpperCase();
+        }
+        if (firstName != null && firstName != "") {
+            initials = initials + firstName.substring(0, 1).toUpperCase();
+        }
+        if (middleName != null && middleName != "") {
+            initials = initials + middleName.substring(0, 1).toUpperCase();
+        }
+
+        return initials;
+    }
+
     private String getParameterValue(HashMap<String, Serializable> parameters, String key) {
-        String value = (parameters.get(key) instanceof ContextAware) ? (String) ((ContextAware) parameters.get(key)).getObjectValue() : (String) parameters.get(key);
-        return value;
+        return (parameters.get(key) instanceof ContextAware) ? (String) ((ContextAware) parameters.get(key)).getObjectValue() : (String) parameters.get(key);
     }
 
     public boolean cancel(long l, long l1, AbstractGenericOrchestration abstractGenericOrchestration) {

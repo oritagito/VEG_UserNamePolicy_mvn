@@ -1,4 +1,4 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
@@ -18,48 +18,43 @@
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
-            <version>3.8.1</version>
+            <version>4.12</version>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>3.8.1</version>
-        </dependency>
-        <dependency>
             <groupId>com.oracle.oim</groupId>
-            <artifactId>oimclient-1.0</artifactId>
-            <version>1.0</version>
+            <artifactId>oimclient</artifactId>
+            <version>1.1</version>
         </dependency>
         <dependency>
             <groupId>com.oracle.oim</groupId>
             <artifactId>wlfullclient</artifactId>
-            <version>1.0</version>
+            <version>1.1</version>
         </dependency>
         <dependency>
             <groupId>com.oracle.oim</groupId>
             <artifactId>xlAPI</artifactId>
-            <version>1.0</version>
+            <version>1.1</version>
         </dependency>
         <dependency>
             <groupId>com.oracle.oim</groupId>
             <artifactId>xlLogger</artifactId>
-            <version>1.0</version>
+            <version>1.1</version>
         </dependency>
         <dependency>
             <groupId>com.oracle.oim</groupId>
             <artifactId>xlScheduler</artifactId>
-            <version>1.0</version>
+            <version>1.1</version>
         </dependency>
         <dependency>
             <groupId>com.oracle.oim</groupId>
             <artifactId>xlUtils</artifactId>
-            <version>1.0</version>
+            <version>1.1</version>
         </dependency>
         <dependency>
             <groupId>com.oracle.oim</groupId>
             <artifactId>xlVO</artifactId>
-            <version>1.0</version>
+            <version>1.1</version>
         </dependency>
     </dependencies>
 
