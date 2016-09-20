@@ -9,6 +9,7 @@ import java.util.Map;
 
 public class GenerateLogin implements UserNamePolicy {
 
+    @Override
     public String getUserNameFromPolicy(Map<String, String> reqData) throws UserNameGenerationException {
 
         String userName;
@@ -16,6 +17,7 @@ public class GenerateLogin implements UserNamePolicy {
         return userName;
     }
 
+    @Override
     public boolean isUserNameValid(String userName, Map<String, String> reqData) {
 
         boolean isUserNameValid = true;
@@ -37,12 +39,15 @@ public class GenerateLogin implements UserNamePolicy {
         }
 
         String lastName = reqData.get("Last Name");
-        if (lastName == null || lastName.length() == 0 || Utils.isContainInvalidCharacters(lastName))
-            isUserNameValid = false;
+        if (!(lastName == null || lastName.length() == 0)) {
+            if (Utils.isContainInvalidCharacters(lastName))
+                isUserNameValid = false;
+        }
 
         return isUserNameValid;
     }
 
+    @Override
     public String getDescription(Locale locale) {
         return "Custom UFA UserNamePolicy (firstInitial lastName)";
     }

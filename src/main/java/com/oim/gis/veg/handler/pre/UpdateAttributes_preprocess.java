@@ -20,6 +20,7 @@ public class UpdateAttributes_preprocess implements PreProcessHandler {
     private static final Logger LOG = Logger.getLogger("PLUGINS");
     private final String className = getClass().getName();
 
+    @Override
     public EventResult execute(long l, long l1, Orchestration orchestration) {
         LOG.entering(className, "---*--- execute ---*--- ");
         LOG.log(Level.INFO, "---* Entering  EventResult of UpdateAttributes_preprocess");
@@ -37,6 +38,7 @@ public class UpdateAttributes_preprocess implements PreProcessHandler {
         return new EventResult();
     }
 
+    @Override
     public BulkEventResult execute(long l, long l1, BulkOrchestration bulkOrchestration) {
         LOG.entering(className, "---*--- execute ---*---");
         LOG.log(Level.INFO, "---* Entering BulkEventResult of UpdateAttributes_postprocess");
@@ -65,16 +67,20 @@ public class UpdateAttributes_preprocess implements PreProcessHandler {
         if (operation.equalsIgnoreCase("DELETE")) {
             LOG.log(Level.INFO, "---* Operation is DELETE");
 
-            response = updateLogin(userKey, true);
-            LOG.log(Level.INFO, "---* response updateLogin-> [" + response + "]");
+            try {
+                response = updateLogin(userKey, true);
+                LOG.log(Level.INFO, "---* response updateLogin-> [" + response + "]");
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
 
         LOG.exiting(this.className, "---* executeEvent");
     }
 
-    private String updateLogin(String userKey, boolean isDeleted) {
+    private String updateLogin(String userKey, boolean isDeleted) throws Exception {
 
-        String response = null;
+        String response = "Error updateLogin";
 
         try {
             User user = Utils.getUserManager().getDetails(userKey, null, false);
@@ -112,25 +118,32 @@ public class UpdateAttributes_preprocess implements PreProcessHandler {
 
         } catch (NoSuchUserException e) {
             LOG.log(Level.WARNING, "---* NoSuchUserException", e);
+            throw new Exception(e);
         } catch (UserLookupException e) {
             LOG.log(Level.WARNING, "---* UserLookupException", e);
+            throw new Exception(e);
         } catch (ValidationFailedException e) {
             LOG.log(Level.WARNING, "---* ValidationFailedException", e);
+            throw new Exception(e);
         } catch (UserModifyException e) {
             LOG.log(Level.WARNING, "---* UserModifyException", e);
+            throw new Exception(e);
         }
 
         return response;
     }
 
+    @Override
     public boolean cancel(long l, long l1, AbstractGenericOrchestration abstractGenericOrchestration) {
         return false;
     }
 
+    @Override
     public void compensate(long l, long l1, AbstractGenericOrchestration abstractGenericOrchestration) {
 
     }
 
+    @Override
     public void initialize(HashMap<String, String> hashMap) {
 
     }

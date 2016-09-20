@@ -31,16 +31,17 @@ public class MiddleNameValidation implements ValidationHandler {
 
     private String getParamaterValue(HashMap<String, Serializable> parameters, String key) {
         if (parameters.containsKey(key)) {
-            String value = (parameters.get(key) instanceof ContextAware) ? (String) ((ContextAware) parameters.get(key)).getObjectValue() : (String) parameters.get(key);
-            return value;
+            return (parameters.get(key) instanceof ContextAware) ? (String) ((ContextAware) parameters.get(key)).getObjectValue() : (String) parameters.get(key);
         } else {
             return null;
         }
     }
 
+    @Override
     public void validate(long l, long l1, BulkOrchestration bulkOrchestration) throws ValidationException, ValidationFailedException {
     }
 
+    @Override
     public void initialize(HashMap<String, String> hashMap) {
     }
 }

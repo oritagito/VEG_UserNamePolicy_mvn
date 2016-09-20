@@ -30,6 +30,7 @@ public class UpdateAttributes_postprocess implements PostProcessHandler {
 
     private final Locale LOCALE = new Locale("ru", "RU");
 
+    @Override
     public EventResult execute(long l, long l1, Orchestration orchestration) {
         LOG.entering(className, "---*--- execute ---*--- ");
         LOG.log(Level.INFO, "---* Entering  EventResult of UpdateAttributes_postprocess");
@@ -47,6 +48,7 @@ public class UpdateAttributes_postprocess implements PostProcessHandler {
         return new EventResult();
     }
 
+    @Override
     public BulkEventResult execute(long l, long l1, BulkOrchestration bulkOrchestration) {
         LOG.entering(className, "---*--- execute ---*---");
         LOG.log(Level.INFO, "---* Entering BulkEventResult of UpdateAttributes_postprocess");
@@ -109,16 +111,24 @@ public class UpdateAttributes_postprocess implements PostProcessHandler {
             }
 
             if (isUpdateLastName) {
-                response = updateLogin(userKey, firstName, lastName, middleName, false);
-                LOG.log(Level.INFO, "---* response updateLogin-> [" + response + "]");
+                try {
+                    response = updateLogin(userKey, firstName, lastName, middleName, false);
+                    LOG.log(Level.INFO, "---* response updateLogin-> [" + response + "]");
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
 
             if (isUpdateAttributes) {
-                response = updateDisplayNameAndInitials(userKey, firstName, lastName, middleName);
-                LOG.log(Level.INFO, "---* response updateDisplayNameAndInitials-> [" + response + "]");
+                try {
+                    response = updateDisplayNameAndInitials(userKey, firstName, lastName, middleName);
+                    LOG.log(Level.INFO, "---* response updateDisplayNameAndInitials-> [" + response + "]");
 
-                response = updateEmpStatusAndLocale(userKey, empStatus, true);
-                LOG.log(Level.INFO, "---* response updateEmpStatusAndLocale-> [" + response + "]");
+                    response = updateEmpStatusAndLocale(userKey, empStatus, true);
+                    LOG.log(Level.INFO, "---* response updateEmpStatusAndLocale-> [" + response + "]");
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
 
         } else if (operation.equalsIgnoreCase("CREATE")) {
@@ -128,26 +138,31 @@ public class UpdateAttributes_postprocess implements PostProcessHandler {
             LOG.log(Level.FINEST, "---* empStatus -> [" + empStatus + "]");
 
             firstName = getParameterValue(parameters, "First Name") == null ? "" : getParameterValue(parameters, "First Name");
-            lastName = getParameterValue(parameters, "Last Name") == null ? "" : getParameterValue(parameters, "Last Name");
-            middleName = getParameterValue(parameters, "Middle Name") == null ? "" : getParameterValue(parameters, "Middle Name");
-
             LOG.log(Level.FINEST, "---* firstName -> [" + firstName + "]");
+
+            lastName = getParameterValue(parameters, "Last Name") == null ? "" : getParameterValue(parameters, "Last Name");
             LOG.log(Level.FINEST, "---* lastName -> [" + lastName + "]");
+
+            middleName = getParameterValue(parameters, "Middle Name") == null ? "" : getParameterValue(parameters, "Middle Name");
             LOG.log(Level.FINEST, "---* middleName -> [" + middleName + "]");
 
-            response = updateDisplayNameAndInitials(userKey, firstName, lastName, middleName);
-            LOG.log(Level.INFO, "---* response updateDisplayNameAndInitials-> [" + response + "]");
+            try {
+                response = updateDisplayNameAndInitials(userKey, firstName, lastName, middleName);
+                LOG.log(Level.INFO, "---* response updateDisplayNameAndInitials-> [" + response + "]");
 
-            response = updateEmpStatusAndLocale(userKey, empStatus, false);
-            LOG.log(Level.INFO, "---* response updateEmpStatusAndLocale-> [" + response + "]");
+                response = updateEmpStatusAndLocale(userKey, empStatus, false);
+                LOG.log(Level.INFO, "---* response updateEmpStatusAndLocale-> [" + response + "]");
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
 
         LOG.exiting(this.className, "---* executeEvent");
     }
 
-    private String updateEmpStatusAndLocale(String userKey, String empStatus, boolean isUpdate) {
+    private String updateEmpStatusAndLocale(String userKey, String empStatus, boolean isUpdate) throws Exception {
 
-        String response = null;
+        String response = "Error updateEmpStatusAndLocale";
 
         try {
             User user = Utils.getUserManager().getDetails(userKey, null, false);
@@ -227,27 +242,35 @@ public class UpdateAttributes_postprocess implements PostProcessHandler {
             response = "Success updateEmpStatusAndLocale";
 
         } catch (NoSuchUserException e) {
-            LOG.log(Level.WARNING, "---* NoSuchUserException", e);
+            LOG.log(Level.WARNING, "---* NoSuchUserException", e.getMessage());
+            throw new Exception(e);
         } catch (UserLookupException e) {
-            LOG.log(Level.WARNING, "---* UserLookupException", e);
+            LOG.log(Level.WARNING, "---* UserLookupException", e.getMessage());
+            throw new Exception(e);
         } catch (ValidationFailedException e) {
-            LOG.log(Level.WARNING, "---* ValidationFailedException", e);
+            LOG.log(Level.WARNING, "---* ValidationFailedException", e.getMessage());
+            throw new Exception(e);
         } catch (UserModifyException e) {
-            LOG.log(Level.WARNING, "---* UserModifyException", e);
+            LOG.log(Level.WARNING, "---* UserModifyException", e.getMessage());
+            throw new Exception(e);
         } catch (UserNameGenerationException e) {
-            LOG.log(Level.WARNING, "---* UserNameGenerationException", e);
+            LOG.log(Level.WARNING, "---* UserNameGenerationException", e.getMessage());
+            throw new Exception(e);
         } catch (UserEnableException e) {
-            LOG.log(Level.WARNING, "---* UserEnableException", e);
+            LOG.log(Level.WARNING, "---* UserEnableException", e.getMessage());
+            throw new Exception(e);
         } catch (UserDisableException e) {
-            LOG.log(Level.WARNING, "---* UserDisableException", e);
+            LOG.log(Level.WARNING, "---* UserDisableException", e.getMessage());
+            throw new Exception(e);
         }
 
         return response;
     }
 
-    private String updateDisplayNameAndInitials(String userKey, String firstName, String lastName, String middleName) {
+    private String updateDisplayNameAndInitials(String userKey, String firstName, String lastName, String middleName) throws Exception {
 
-        String response = null;
+        String response = "Error updateDisplayNameAndInitials";
+        ;
 
         try {
             User user = Utils.getUserManager().getDetails(userKey, null, false);
@@ -278,21 +301,26 @@ public class UpdateAttributes_postprocess implements PostProcessHandler {
             response = "Success updateDisplayNameAndInitials";
 
         } catch (NoSuchUserException e) {
-            LOG.log(Level.WARNING, "---* NoSuchUserException", e);
+            LOG.log(Level.WARNING, "---* NoSuchUserException", e.getMessage());
+            throw new Exception(e);
         } catch (UserLookupException e) {
-            LOG.log(Level.WARNING, "---* UserLookupException", e);
+            LOG.log(Level.WARNING, "---* UserLookupException", e.getMessage());
+            throw new Exception(e);
         } catch (ValidationFailedException e) {
-            LOG.log(Level.WARNING, "---* ValidationFailedException", e);
+            LOG.log(Level.WARNING, "---* ValidationFailedException", e.getMessage());
+            throw new Exception(e);
         } catch (UserModifyException e) {
-            LOG.log(Level.WARNING, "---* UserModifyException", e);
+            LOG.log(Level.WARNING, "---* UserModifyException", e.getMessage());
+            throw new Exception(e);
         }
 
         return response;
     }
 
-    private String updateLogin(String userKey, String firstName, String lastName, String middleName, boolean isDeleted) {
+    private String updateLogin(String userKey, String firstName, String lastName, String middleName, boolean isDeleted) throws Exception {
 
-        String response = null;
+        String response = "Error updateLogin";
+        ;
 
         try {
             User user = Utils.getUserManager().getDetails(userKey, null, false);
@@ -339,15 +367,20 @@ public class UpdateAttributes_postprocess implements PostProcessHandler {
             response = "Success updateLogin";
 
         } catch (NoSuchUserException e) {
-            LOG.log(Level.WARNING, "---* NoSuchUserException", e);
+            LOG.log(Level.WARNING, "---* NoSuchUserException", e.getMessage());
+            throw new Exception(e);
         } catch (UserLookupException e) {
-            LOG.log(Level.WARNING, "---* UserLookupException", e);
+            LOG.log(Level.WARNING, "---* UserLookupException", e.getMessage());
+            throw new Exception(e);
         } catch (UserNameGenerationException e) {
-            LOG.log(Level.WARNING, "---* UserNameGenerationException", e);
+            LOG.log(Level.WARNING, "---* UserNameGenerationException", e.getMessage());
+            throw new Exception(e);
         } catch (UserModifyException e) {
-            LOG.log(Level.WARNING, "---* UserModifyException", e);
+            LOG.log(Level.WARNING, "---* UserModifyException", e.getMessage());
+            throw new Exception(e);
         } catch (ValidationFailedException e) {
-            LOG.log(Level.WARNING, "---* ValidationFailedException", e);
+            LOG.log(Level.WARNING, "---* ValidationFailedException", e.getMessage());
+            throw new Exception(e);
         }
 
         return response;
@@ -390,14 +423,17 @@ public class UpdateAttributes_postprocess implements PostProcessHandler {
         return (parameters.get(key) instanceof ContextAware) ? (String) ((ContextAware) parameters.get(key)).getObjectValue() : (String) parameters.get(key);
     }
 
+    @Override
     public boolean cancel(long l, long l1, AbstractGenericOrchestration abstractGenericOrchestration) {
         return false;
     }
 
+    @Override
     public void compensate(long l, long l1, AbstractGenericOrchestration abstractGenericOrchestration) {
 
     }
 
+    @Override
     public void initialize(HashMap<String, String> hashMap) {
 
     }
