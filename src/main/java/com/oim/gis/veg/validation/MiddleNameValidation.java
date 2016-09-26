@@ -11,6 +11,9 @@ import oracle.iam.platform.kernel.vo.Orchestration;
 import java.io.Serializable;
 import java.util.HashMap;
 
+/**
+ * проверка вводимых данных в поле отчество
+ */
 public class MiddleNameValidation implements ValidationHandler {
     private static final String MIDDLE_NAME_REGEX = "^[a-z,A-Z,а-я,А-Я]+|[a-z,A-Z,а-я,А-Я]+[\\s,\\-]?[a-z,A-Z,а-я,А-Я]+";
     private static final String MIDDLE_NAME_MESSAGE = "Поле 'Отчество' содержит недопустимые символы. Допустимо однократное использование ' ' и '-' в середине текста";
@@ -20,7 +23,7 @@ public class MiddleNameValidation implements ValidationHandler {
         HashMap<String, Serializable> contextParams = orchestration.getParameters();
         String newMiddleName = getParamaterValue(contextParams, UserManagerConstants.AttributeName.MIDDLENAME.getId());
 
-        if (newMiddleName != null && !newMiddleName.equalsIgnoreCase("")) {
+        if (newMiddleName != null && !newMiddleName.isEmpty()) {
             boolean isMiddleNameValidate = newMiddleName.matches(MIDDLE_NAME_REGEX);
 
             if (!isMiddleNameValidate) {

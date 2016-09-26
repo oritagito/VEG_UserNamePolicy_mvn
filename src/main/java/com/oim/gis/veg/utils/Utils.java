@@ -5,13 +5,21 @@ import oracle.iam.identity.usermgmt.api.UserManager;
 import oracle.iam.identity.usermgmt.utils.UserNameGenerationUtil;
 import oracle.iam.identity.usermgmt.utils.UserNamePolicyUtil;
 import oracle.iam.platform.Platform;
+import oracle.iam.platform.entitymgr.EntityManager;
 
 import java.util.List;
 
 public class Utils {
 
     private static UserManager userManager;
+    private static EntityManager entityManager;
 
+    /**
+     * таблица транслитерации
+     *
+     * @param c
+     * @return
+     */
     private static String cyrillicToLatinMapping(char c) {
         switch (c) {
             case 'А':
@@ -119,19 +127,34 @@ public class Utils {
         }
     }
 
+    /**
+     * проверка на наличие недопустимых символов
+     *
+     * @param inputString - строка для проверки
+     * @return - возвращает true или false
+     */
     public static boolean isContainInvalidCharacters(String inputString) {
 
         String NAME_REGEX = "^[a-z,A-Z,а-я,А-Я]+|[a-z,A-Z,а-я,А-Я]+[\\s,\\-]?[a-z,A-Z,а-я,А-Я]+";
 
         boolean isNameValid = false;
 
-        if (inputString != null && !inputString.equalsIgnoreCase("")) {
+        if (inputString != null && !inputString.isEmpty()) {
             isNameValid = !inputString.matches(NAME_REGEX);
         }
 
         return isNameValid;
     }
 
+    /**
+     * генерация login по обычным правилам
+     *
+     * @param firstName
+     * @param lastName
+     * @param middleName
+     * @return - возвращает сгенерированный login
+     * @throws UserNameGenerationException
+     */
     public static String generateName(String firstName, String lastName, String middleName) throws UserNameGenerationException {
 
         String login;
@@ -179,6 +202,16 @@ public class Utils {
         return login;
     }
 
+    /**
+     * для тестирования
+     *
+     * @param firstName
+     * @param lastName
+     * @param middleName
+     * @param userExists
+     * @return
+     * @throws UserNameGenerationException
+     */
     public static String generateNameTest(String firstName, String lastName, String middleName, List<String> userExists) throws UserNameGenerationException {
 
         String login;
@@ -232,9 +265,16 @@ public class Utils {
 
     public static UserManager getUserManager() {
         if (userManager == null) {
-            userManager = (UserManager) Platform.getService(UserManager.class);
+            userManager = Platform.getService(UserManager.class);
         }
         return userManager;
+    }
+
+    public static EntityManager getEntityManager() {
+        if (entityManager == null) {
+            entityManager = Platform.getService(EntityManager.class);
+        }
+        return entityManager;
     }
 
 }

@@ -11,6 +11,9 @@ import oracle.iam.platform.kernel.vo.Orchestration;
 import java.io.Serializable;
 import java.util.HashMap;
 
+/**
+ * проверка вводимых данных в поле фамилия
+ */
 public class LastNameValidation implements ValidationHandler {
     private static final String LAST_NAME_REGEX = "^[a-z,A-Z,а-я,А-Я]+|[a-z,A-Z,а-я,А-Я]+[\\s,\\-]?[a-z,A-Z,а-я,А-Я]+";
     private static final String LAST_NAME_MESSAGE = "Поле 'Фамилия' содержит недопустимые символы. Допустимо однократное использование ' ' и '-' в середине текста";
@@ -20,7 +23,7 @@ public class LastNameValidation implements ValidationHandler {
         HashMap<String, Serializable> contextParams = orchestration.getParameters();
         String newLastName = getParamaterValue(contextParams, UserManagerConstants.AttributeName.LASTNAME.getId());
 
-        if (newLastName != null && !newLastName.equalsIgnoreCase("")) {
+        if (newLastName != null && !newLastName.isEmpty()) {
             boolean isLastNameValidate = newLastName.matches(LAST_NAME_REGEX);
 
             if (!isLastNameValidate) {

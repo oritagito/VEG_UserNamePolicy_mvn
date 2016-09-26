@@ -11,6 +11,9 @@ import oracle.iam.platform.kernel.vo.Orchestration;
 import java.io.Serializable;
 import java.util.HashMap;
 
+/**
+ * проверка вводимых данных в поле имя
+ */
 public class FirstNameValidation implements ValidationHandler {
 
     private static final String FIRST_NAME_REGEX = "^[a-z,A-Z,а-я,А-Я]+|[a-z,A-Z,а-я,А-Я]+[\\s,\\-]?[a-z,A-Z,а-я,А-Я]+";
@@ -20,7 +23,7 @@ public class FirstNameValidation implements ValidationHandler {
         HashMap<String, Serializable> contextParams = orchestration.getParameters();
         String newFirstName = getParamaterValue(contextParams, UserManagerConstants.AttributeName.FIRSTNAME.getId());
 
-        if (newFirstName != null && !newFirstName.equalsIgnoreCase("")) {
+        if (newFirstName != null && !newFirstName.isEmpty()) {
             boolean isFirstNameValidate = newFirstName.matches(FIRST_NAME_REGEX);
 
             if (!isFirstNameValidate) {

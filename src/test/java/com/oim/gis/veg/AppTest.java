@@ -52,7 +52,7 @@ public class AppTest {
     public void testGeneratelogin() throws UserNameGenerationException {
 
         // Exists
-        List<String> userExists = new LinkedList<String>();
+        List<String> userExists = new LinkedList();
         userExists.add("PETROV");
         userExists.add("PPETROV");
         userExists.add("EVASILEV");
@@ -65,6 +65,6 @@ public class AppTest {
         userExists.add("IGNATOV");
 
         Utils testGenerateLogin = new Utils();
-        assertEquals("Test #1", login, testGenerateLogin.generateNameTest(firstName, lastName, middleName, userExists));
+        assertEquals("Test #1", login, Utils.generateNameTest(firstName, lastName, middleName, userExists));
     }
 }
